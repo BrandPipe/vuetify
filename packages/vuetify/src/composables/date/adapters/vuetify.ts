@@ -381,6 +381,26 @@ function toISO (adapter: DateAdapter<any>, value: Date) {
   return `${year}-${month}-${day}`
 }
 
+function parse (value: string, formatString: string, locale: string, formats?: Record<string, CustomDateFormat>) {
+
+  const customFormat = formats?.[formatString]
+
+  if (typeof customFormat === 'function') {
+    return null
+  }
+
+  switch (formatString) {
+    case 'keyboardDate':
+
+      // check locale
+      const [day, month, year] = value.split('/').map(Number)
+
+      return new Date(year, month - 1, day)
+    default:
+      return null
+  }
+}
+
 function parseISO (value: string) {
   const [year, month, day] = value.split('-').map(Number)
 
@@ -582,6 +602,10 @@ export class VuetifyDateAdapter implements DateAdapter<Date> {
 
   parseISO (date: string) {
     return parseISO(date)
+  }
+
+  parse(value: string, format: string) {
+    return parse(value, format, this.locale, this.formats)
   }
 
   addMinutes (date: Date, amount: number) {
