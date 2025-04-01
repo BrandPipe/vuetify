@@ -167,9 +167,12 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
     }
 
     function onUpdateDisplayModel (value: string) {
-      if (value != null) return
 
-      model.value = null
+      model.value = adapter.isValid(value) ? adapter.date(value) : null
+
+      //if (value != null) return
+
+      //model.value = null
     }
 
     function onBlur () {
