@@ -395,7 +395,7 @@ function getDateFormat(locale?: string) {
 function getFormattedDateRegex(format: string) {
   return new RegExp(
       '^\\s*' + format.toUpperCase().replaceAll(/([MDY])\1*/g, '(?<$1>\\d+)') + '\\s*$'
-    );
+  )
 }
 
 function parse(value: string, locale?: string) {
