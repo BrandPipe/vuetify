@@ -166,9 +166,13 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
       menu.value = false
     }
 
-    function onUpdateDisplayModel (value: string) {
+    function onUpdateDisplayModel (value: string | null) {
 
-      model.value = adapter.isValid(value) ? adapter.date(value) : null
+      if (value == null) return
+
+      alert(value)
+
+      model.value = adapter.parse(value, props.displayFormat ?? 'keyboardDate')
 
       //if (value != null) return
 

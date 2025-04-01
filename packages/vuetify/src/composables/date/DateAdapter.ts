@@ -2,6 +2,7 @@ export interface DateAdapter<T = unknown> {
   date (value?: any): T | null
   format (date: T, formatString: string): string
   toJsDate (value: T): Date
+  parse(value: string, formatString: string): Date | null
   parseISO (date: string): T
   toISO (date: T): string
 
