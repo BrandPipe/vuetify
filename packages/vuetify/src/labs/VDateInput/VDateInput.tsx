@@ -71,6 +71,7 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
     const adapter = useDate()
     const { mobile } = useDisplay(props)
     const { isFocused, focus, blur } = useFocus(props)
+
     const model = useProxiedModel(
       props,
       'modelValue',
@@ -92,7 +93,7 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
       return adapter.format(date, props.displayFormat ?? 'keyboardDate')
     }
 
-    const display = computed(() => {
+    const input = computed(() => {
       const value = wrapInArray(model.value)
 
       if (!value.length) return null
@@ -166,17 +167,23 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
       menu.value = false
     }
 
-    function onUpdateDisplayModel (value: string | null) {
+    function onUpdateInputModel (value: string | null) {
+      if (props.multiple === true || props.multiple === 'range')
+        return
 
-      if (value == null) return
+      if (!value) {
+        model.value = null
+        return
+      }
 
-      alert(value)
+      const d = adapter.parse(value, 'keyboardDate')
 
-      model.value = adapter.parse(value, props.displayFormat ?? 'keyboardDate')
+      if (!d)
+        return
 
-      //if (value != null) return
+      model.value = adapter.toISO(d)
 
-      //model.value = null
+      menu.value = false
     }
 
     function onBlur () {
@@ -200,7 +207,7 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
           { ...textFieldProps }
           class={ props.class }
           style={ props.style }
-          modelValue={ display.value }
+          modelValue={ input.value }
           inputmode={ inputmode.value }
           readonly={ isReadonly.value }
           onKeydown={ isInteractive.value ? onKeydown : undefined }
@@ -209,7 +216,7 @@ export const VDateInput = genericComponent<VDateInputSlots>()({
           onBlur={ onBlur }
           onClick:control={ isInteractive.value ? onClick : undefined }
           onClick:prepend={ isInteractive.value ? onClick : undefined }
-          onUpdate:modelValue={ onUpdateDisplayModel }
+          onUpdate:modelValue={ onUpdateInputModel }
         >
           {{
             ...slots,

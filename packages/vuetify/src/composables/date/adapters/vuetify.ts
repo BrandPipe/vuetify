@@ -381,24 +381,45 @@ function toISO (adapter: DateAdapter<any>, value: Date) {
   return `${year}-${month}-${day}`
 }
 
-function parse (value: string, formatString: string, locale: string, formats?: Record<string, CustomDateFormat>) {
+function getDateFormat(locale?: string) {
+  const formatted = new Intl.DateTimeFormat(locale).format(new Date(2000, 0, 2))
 
-  const customFormat = formats?.[formatString]
+  return formatted
+    .replace('2000', 'YYYY')
+    .replace('01', 'MM')
+    .replace('1', 'M')
+    .replace('02', 'DD')
+    .replace('2', 'D')
+}
 
-  if (typeof customFormat === 'function') {
-    return null
-  }
+function getFormattedDateRegex(format: string) {
+  return new RegExp(
+      '^\\s*' + format.toUpperCase().replaceAll(/([MDY])\1*/g, '(?<$1>\\d+)') + '\\s*$'
+    );
+}
 
-  switch (formatString) {
-    case 'keyboardDate':
+function parse(value: string, locale?: string) {
+  const format = getDateFormat(locale)
+  const regex = getFormattedDateRegex(format)
 
-      // check locale
-      const [day, month, year] = value.split('/').map(Number)
+  const { groups } = value.match(regex) ?? {}
 
-      return new Date(year, month - 1, day)
-    default:
-      return null
-  }
+  if (!groups) return null
+
+  const y = Number(groups.Y)
+  const m = Number(groups.M)
+  const d = Number(groups.D)
+
+  // Validate range of year and month
+  if (y < 1000 || y > 2999) return null
+  if (m < 1 || m > 12) return null
+
+  const date = new Date(y, m - 1, d)
+
+  // Validate day of month exists
+  if (d !== date.getDate()) return null
+
+  return isNaN(date.valueOf()) ? null : date
 }
 
 function parseISO (value: string) {
@@ -520,7 +541,8 @@ function getDiff (date: Date, comparing: Date | string, unit?: string) {
 
   switch (unit) {
     case 'years':
-      return d.getFullYear() - c.getFullYear()
+      const yearsDate = new Date(d.getTime() - c.getTime())
+      return Math.abs(yearsDate.getUTCFullYear() - 1970)
     case 'quarters':
       return Math.floor((d.getMonth() - c.getMonth() + (d.getFullYear() - c.getFullYear()) * 12) / 4)
     case 'months':
@@ -604,8 +626,8 @@ export class VuetifyDateAdapter implements DateAdapter<Date> {
     return parseISO(date)
   }
 
-  parse(value: string, format: string) {
-    return parse(value, format, this.locale, this.formats)
+  parse (value: string, _format: string) {
+    return parse(value, this.locale)
   }
 
   addMinutes (date: Date, amount: number) {
